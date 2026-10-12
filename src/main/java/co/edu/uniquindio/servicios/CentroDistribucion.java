@@ -71,14 +71,14 @@ public class CentroDistribucion {
 
     public Paquete despacharProritario(){
         Paquete paquete = colaPrioridad.poll();
-        if(paquete == null){
+        if(paquete != null){
             colaLlegada.remove(paquete);
         }
         return paquete;
     }
 
     public Paquete verSiguientePrioritario(){
-        return colaPrioridad.poll();
+        return colaPrioridad.peek();
     }
 
     //Asignacion y entrega
@@ -94,7 +94,7 @@ public class CentroDistribucion {
         if(asignaciones.containsKey(codigo)){
             throw new IllegalArgumentException("El paquete " + codigo + " ya está asignado");
         }
-        Repartidor repartidor = asignaciones.get(idRepartidor);
+        Repartidor repartidor = repartidores.get(idRepartidor);
         if(repartidor == null){
             throw new IllegalArgumentException("no existe el repartidor " + idRepartidor);
         }
@@ -104,6 +104,8 @@ public class CentroDistribucion {
         if(!repartidor.isDisponible()){
             throw new IllegalArgumentException("El repartidor"+idRepartidor+" no disponible");
         }
+        asignaciones.put(codigo, repartidor);
+        repartidor.setDisponible(false);
     }
 
 
