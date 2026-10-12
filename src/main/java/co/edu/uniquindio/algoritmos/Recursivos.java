@@ -21,4 +21,19 @@ public class Recursivos {
         }
         return restoDeLaLista;
     }
+
+    public static int contarPrioridadMinina(List<Paquete> paquetes, int minima, int indice){
+        //caso base
+        if(indice >= paquetes.size()) {
+            return 0;
+        }
+        //caso receursivo
+        int restoDeLaLista = contarPrioridadMinina(paquetes, minima, indice +1);
+        if(paquetes.get(indice).getPrioridad()>=minima) {
+            return 1 + restoDeLaLista;
+        }
+        return restoDeLaLista;
+    }
+
+
 }
