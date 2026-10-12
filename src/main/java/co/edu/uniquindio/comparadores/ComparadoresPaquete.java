@@ -3,30 +3,50 @@ import co.edu.uniquindio.modelo.Paquete;
 
 import java.util.Comparator;
 
-public class ComparadoresPaquete {
+public class ComparadoresPaquete  {
 
     private ComparadoresPaquete() {
     }
-
-    /** Prioridad de mayor a menor. */
-    public static final Comparator<Paquete> PRIORIDAD_DESC =
-            Comparator.comparingInt(Paquete::getPrioridad).reversed();
-
-    /** Peso de mayor a menor. */
-    public static final Comparator<Paquete> PESO_DESC =
-            Comparator.comparingDouble(Paquete::getPeso).reversed();
-
-    /** Tiempo estimado de menor a mayor. */
-    public static final Comparator<Paquete> TIEMPO_ASC =
-            Comparator.comparingInt(Paquete::getTiempoEstimado);
-
-    /**
-     * Despacho prioritario:
-     * 1) mayor prioridad, 2) menor tiempo estimado, 3) código alfabéticamente.
-     */
-    public static final Comparator<Paquete> DESPACHO_PRIORITARIO =
-            PRIORIDAD_DESC
-                    .thenComparing(TIEMPO_ASC)
-                    .thenComparing(Comparator.<Paquete>naturalOrder());
+    // 1. Clase que implementa explícitamente Comparator
+    public static class ComparadorPrioridadDesc implements Comparator<Paquete> {
+        @Override
+        public int compare(Paquete a, Paquete b) {
+            return Integer.compare(b.getPrioridad(), a.getPrioridad());
+        }
+    }
+    // 2. Clase que implementa explícitamente Comparator
+    public static class ComparadorPesoDesc implements Comparator<Paquete> {
+        @Override
+        public int compare(Paquete a, Paquete b) {
+            return Double.compare(b.getPeso(), a.getPeso());
+        }
+    }
+    // 3. Clase que implementa explícitamente Comparator
+    public static class ComparadorTiempoAsc implements Comparator<Paquete> {
+        @Override
+        public int compare(Paquete a, Paquete b) {
+            return Integer.compare(a.getTiempoEstimado(), b.getTiempoEstimado());
+        }
+    }
+    // 4. Clase que implementa explícitamente Comparator
+    public static class ComparadorDespachoPrioritario implements Comparator<Paquete> {
+        @Override
+        public int compare(Paquete a, Paquete b) {
+            int compPrioridad = Integer.compare(b.getPrioridad(), a.getPrioridad());
+            if (compPrioridad != 0) {
+                return compPrioridad;
+            }
+            int compTiempo = Integer.compare(a.getTiempoEstimado(), b.getTiempoEstimado());
+            if (compTiempo != 0) {
+                return compTiempo;
+            }
+            return a.getCodigo().compareTo(b.getCodigo());
+        }
+    }
+    // Instancias para que el resto del proyecto las use directamente sin romper nada:
+    public static final Comparator<Paquete> PRIORIDAD_DESC = new ComparadorPrioridadDesc();
+    public static final Comparator<Paquete> PESO_DESC = new ComparadorPesoDesc();
+    public static final Comparator<Paquete> TIEMPO_ASC = new ComparadorTiempoAsc();
+    public static final Comparator<Paquete> DESPACHO_PRIORITARIO = new ComparadorDespachoPrioritario();
 }
 
