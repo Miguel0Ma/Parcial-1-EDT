@@ -83,7 +83,28 @@ public class CentroDistribucion {
 
     //Asignacion y entrega
 
-
+    public void asignarPaquete(String codigo,String idRepartidor){
+        Paquete paquete = paquetesPorCodigo.get(codigo);
+        if(paquete == null){
+            throw new IllegalArgumentException("Paquete no existe en el registro."+ codigo);
+        }
+        if(!pendientes.contains(paquete)){
+            throw new IllegalArgumentException("El paquete " + codigo + " ya fue entregado");
+        }
+        if(asignaciones.containsKey(codigo)){
+            throw new IllegalArgumentException("El paquete " + codigo + " ya está asignado");
+        }
+        Repartidor repartidor = asignaciones.get(idRepartidor);
+        if(repartidor == null){
+            throw new IllegalArgumentException("no existe el repartidor " + idRepartidor);
+        }
+        if(!repartidor.getZona().equalsIgnoreCase(paquete.getDestino())){
+            throw new IllegalArgumentException("la zona del repartidor no corresponde al destino del paquete"+paquete.getDestino());
+        }
+        if(!repartidor.isDisponible()){
+            throw new IllegalArgumentException("El repartidor"+idRepartidor+" no disponible");
+        }
+    }
 
 
 
