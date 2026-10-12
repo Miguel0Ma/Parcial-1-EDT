@@ -59,6 +59,12 @@ public class Repartidor {
 
     @Override
     public String toString() {
-        return id + "[" + nombre + ", zona " + zona + ", " + (disponible ? "disponible" : "ocupado") + "]";
+        String estado;
+        if (disponible) {
+            estado = "disponible";
+        } else {
+            estado = "ocupado";
+        }
+        return id + "[" + nombre + ", zona " + zona + ", " + estado + "]";
     }
 }
