@@ -133,4 +133,144 @@ class CentroDistribucionTest {
         centro.despacharProritario();
         assertTrue(centro.existePaquete("PQ1"));
     }
+
+    // ---------- verSiguientePrioritario ----------
+
+    @Test
+    void verSiguienteMuestraElDeMayorPrioridadSinSacarlo() {
+        centro.registrarPaquete(new Paquete("PQ420", "Armenia", 6.0, 3, 30));
+        centro.registrarPaquete(new Paquete("PQ105", "Salento", 3.0, 5, 25));
+
+        assertEquals("PQ105", centro.verSiguientePrioritario().getCodigo());
+        assertEquals("PQ105", centro.verSiguientePrioritario().getCodigo());
+    }
+
+    @Test
+    void verSiguienteNoAlteraElOrdenDeDespacho() {
+        centro.registrarPaquete(new Paquete("PQ420", "Armenia", 6.0, 3, 30));
+        centro.registrarPaquete(new Paquete("PQ105", "Salento", 3.0, 5, 25));
+
+        centro.verSiguientePrioritario();
+
+        assertEquals("PQ105", centro.despacharProritario().getCodigo());
+        assertEquals("PQ420", centro.despacharProritario().getCodigo());
+    }
+
+    @Test
+    void verSiguienteCoincideConElPrimeroQueSeDespacha() {
+        centro.registrarPaquete(new Paquete("PQ731", "Armenia", 12.0, 5, 45));
+        centro.registrarPaquete(new Paquete("PQ105", "Salento", 3.0, 5, 25));
+        centro.registrarPaquete(new Paquete("PQ942", "Calarcá", 8.0, 4, 20));
+
+        Paquete visto = centro.verSiguientePrioritario();
+        Paquete despachado = centro.despacharProritario();
+
+        assertSame(visto, despachado);
+    }
+
+    @Test
+    void verSiguienteSinPaquetesDevuelveNull() {
+        assertNull(centro.verSiguientePrioritario());
+    }
+
+    @Test
+    void verSiguienteAvanzaDespuesDeDespachar() {
+        centro.registrarPaquete(new Paquete("PQ731", "Armenia", 12.0, 5, 45));
+        centro.registrarPaquete(new Paquete("PQ105", "Salento", 3.0, 5, 25));
+
+        centro.despacharProritario();
+
+        assertEquals("PQ731", centro.verSiguientePrioritario().getCodigo());
+    }
+
+    // ---------- asignarPaquete ----------
+
+    private void registrarPaqueteYRepartidor() {
+        centro.registrarPaquete(new Paquete("PQ731", "Armenia", 4.5, 5, 45));
+        centro.registrarRepartidor(new Repartidor("R1", "Ana", "Armenia", true));
+    }
+
+    @Test
+    void asignarDejaAlRepartidorNoDisponible() {
+        registrarPaqueteYRepartidor();
+
+        centro.asignarPaquete("PQ731", "R1");
+
+        assertFalse(centro.consultarRepartidor("R1").isDisponible());
+    }
+
+    @Test
+    void asignarAceptaZonaConDistintasMayusculas() {
+        centro.registrarPaquete(new Paquete("PQ731", "Armenia", 4.5, 5, 45));
+        centro.registrarRepartidor(new Repartidor("R1", "Ana", "ARMENIA", true));
+
+        centro.asignarPaquete("PQ731", "R1");
+
+        assertFalse(centro.consultarRepartidor("R1").isDisponible());
+    }
+
+    @Test
+    void asignarPaqueteInexistenteLanzaExcepcion() {
+        centro.registrarRepartidor(new Repartidor("R1", "Ana", "Armenia", true));
+
+        assertThrows(IllegalArgumentException.class, () -> centro.asignarPaquete("PQ000", "R1"));
+        assertTrue(centro.consultarRepartidor("R1").isDisponible());
+    }
+
+    @Test
+    void asignarConRepartidorInexistenteLanzaExcepcion() {
+        centro.registrarPaquete(new Paquete("PQ731", "Armenia", 4.5, 5, 45));
+
+        assertThrows(IllegalArgumentException.class, () -> centro.asignarPaquete("PQ731", "R99"));
+    }
+
+    @Test
+    void asignarConZonaDistintaAlDestinoLanzaExcepcion() {
+        centro.registrarPaquete(new Paquete("PQ731", "Armenia", 4.5, 5, 45));
+        centro.registrarRepartidor(new Repartidor("R2", "Luis", "Salento", true));
+
+        assertThrows(IllegalArgumentException.class, () -> centro.asignarPaquete("PQ731", "R2"));
+        assertTrue(centro.consultarRepartidor("R2").isDisponible());
+    }
+
+    @Test
+    void asignarConRepartidorNoDisponibleLanzaExcepcion() {
+        centro.registrarPaquete(new Paquete("PQ731", "Armenia", 4.5, 5, 45));
+        centro.registrarRepartidor(new Repartidor("R1", "Ana", "Armenia", false));
+
+        assertThrows(IllegalArgumentException.class, () -> centro.asignarPaquete("PQ731", "R1"));
+    }
+
+    @Test
+    void noSePuedeAsignarDosVecesElMismoPaquete() {
+        registrarPaqueteYRepartidor();
+        centro.registrarRepartidor(new Repartidor("R2", "Luis", "Armenia", true));
+
+        centro.asignarPaquete("PQ731", "R1");
+
+        assertThrows(IllegalArgumentException.class, () -> centro.asignarPaquete("PQ731", "R2"));
+        assertTrue(centro.consultarRepartidor("R2").isDisponible());
+    }
+
+    @Test
+    void repartidorOcupadoNoRecibeUnaNuevaAsignacion() {
+        registrarPaqueteYRepartidor();
+        centro.registrarPaquete(new Paquete("PQ105", "Armenia", 2.0, 4, 20));
+
+        centro.asignarPaquete("PQ731", "R1");
+
+        assertThrows(IllegalArgumentException.class, () -> centro.asignarPaquete("PQ105", "R1"));
+    }
+
+    @Test
+    void repartidorLiberadoPuedeRecibirOtraAsignacion() {
+        registrarPaqueteYRepartidor();
+        centro.registrarPaquete(new Paquete("PQ105", "Armenia", 2.0, 4, 20));
+
+        centro.asignarPaquete("PQ731", "R1");
+        centro.consultarRepartidor("R1").setDisponible(true);
+        centro.asignarPaquete("PQ105", "R1");
+
+        assertFalse(centro.consultarRepartidor("R1").isDisponible());
+    }
 }
