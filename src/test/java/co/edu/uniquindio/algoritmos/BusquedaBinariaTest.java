@@ -8,7 +8,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class DBusquedaBinariaTest {
+class BusquedaBinariaTest {
 
     private Paquete paquete(String codigo) {
         return new Paquete(codigo, "Armenia", 1.0, 3, 10);
