@@ -1,5 +1,8 @@
 package co.edu.uniquindio.servicios;
 
+import co.edu.uniquindio.algoritmos.BusquedaBinaria;
+import co.edu.uniquindio.algoritmos.DivideYVenceras;
+import co.edu.uniquindio.algoritmos.Recursivos;
 import co.edu.uniquindio.comparadores.ComparadoresPaquete;
 import co.edu.uniquindio.estructuras.ListaEnlazada;
 import co.edu.uniquindio.modelo.Paquete;
@@ -18,9 +21,9 @@ public class CentroDistribucion {
     private PriorityQueue<Paquete> colaPrioridad = new PriorityQueue<>(ComparadoresPaquete.DESPACHO_PRIORITARIO);
 
     private Map<String, Repartidor> repartidores = new LinkedHashMap<>();
-    private Map<String, Repartidor> asignaciones = new HashMap<>();
+    private Map<String, String> asignaciones = new HashMap<>();
 
-    private ListaEnlazada<Paquete> listaEnlazada = new ListaEnlazada<>();
+    private ListaEnlazada<Paquete> historial = new ListaEnlazada<>();
 
     public void registrarPaquete(Paquete paquete) {
         if(paquete ==null){
@@ -104,10 +107,101 @@ public class CentroDistribucion {
         if(!repartidor.isDisponible()){
             throw new IllegalArgumentException("El repartidor"+idRepartidor+" no disponible");
         }
-        asignaciones.put(codigo, repartidor);
         repartidor.setDisponible(false);
+        asignaciones.put(codigo, idRepartidor);
+        colaLlegada.remove(paquete);            // por si no había sido despachado antes
+        colaPrioridad.remove(paquete);
     }
 
+    public Repartidor asignarAutomaticamente(String codigo){
+        Paquete paquete = paquetesPorCodigo.get(codigo);
+
+        if(paquete == null){
+            throw new IllegalArgumentException("Paquete no existe en el registro."+ codigo);
+        }
+        for (Repartidor r:repartidores.values()){
+            if (r.isDisponible()&&r.getZona().equalsIgnoreCase(paquete.getDestino())){
+                asignarPaquete(codigo,r.getId());
+            }
+        }
+        return null;
+    }
+
+    public void registrarEntrega(String codigo){
+        Paquete paquete = paquetesPorCodigo.get(codigo);
+        if(paquete == null){
+            throw new IllegalArgumentException("Paquete no existe en el registro."+ codigo);
+        }
+        String idRepartidor = asignaciones.get(codigo);
+        if(idRepartidor == null){
+            throw new IllegalArgumentException("El paquete"+codigo+ "no esta asignado a ningun repartirdor");
+        }
+        pendientes.remove(paquete);
+        asignaciones.remove(codigo);
+        repartidores.get(idRepartidor).setDisponible(true);
+        historial.agregar(paquete);
+    }
+
+    public List<Paquete> ordenNatural(){
+        List<Paquete> lista = new ArrayList<>(registro);
+        Collections.sort(lista);
+        return lista;
+    }
+    public List<Paquete> ordenarPor(Comparator<Paquete> criterio){
+        List<Paquete> copia = new ArrayList<>(registro);
+        copia.sort(criterio);
+        return copia;
+    }
+
+    public double pesoTotalMunicipios(String municipio){
+        return Recursivos.pesoTotalMunicipio(registro,municipio,0);
+
+    }
+    public int contarPrioridadMinima(int minima){
+        return Recursivos.contarPrioridadMinina(registro,minima,0);
+
+    }
+
+    public Paquete buscarBinaria(List<Paquete> listaOrdenada, String codigo){
+        int posicion= BusquedaBinaria.buscarPorCodigo(listaOrdenada, codigo);
+        if(posicion >=0){
+            return listaOrdenada.get(posicion);
+        }else {
+            return null;
+        }
+    }
+
+    public Paquete paqueteMayorPeso(){
+        return DivideYVenceras.mayorPeso(registro);
+    }
+    public List<Paquete> getRegistro() {
+        return Collections.unmodifiableList(registro);
+    }
+
+    public List<Paquete> getPendientes() {
+        return Collections.unmodifiableList(pendientes);
+    }
+
+    public Set<String> getMunicipios() {
+        return Collections.unmodifiableSet(municipios);
+    }
+
+    public Set<String> getMunicipiosOrdenados() {
+        return Collections.unmodifiableSet(municipiosOrdenados);
+    }
+
+    public List<Paquete> paquetesDeMunicipio(String municipio) {
+        List<Paquete> lista = paquetesPorMunicipio.get(municipio);
+        return lista == null ? Collections.<Paquete>emptyList() : Collections.unmodifiableList(lista);
+    }
+
+    public Collection<Repartidor> getRepartidores() {
+        return Collections.unmodifiableCollection(repartidores.values());
+    }
+
+    public ListaEnlazada<Paquete> getHistorial() {
+        return historial;
+    }
 
 
 

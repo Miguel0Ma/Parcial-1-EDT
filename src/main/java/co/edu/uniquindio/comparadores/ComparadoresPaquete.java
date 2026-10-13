@@ -7,28 +7,28 @@ public class ComparadoresPaquete  {
 
     private ComparadoresPaquete() {
     }
-    // 1. Clase que implementa explícitamente Comparator
+    // 1. Clase que compara prioridades
     public static class ComparadorPrioridadDesc implements Comparator<Paquete> {
         @Override
         public int compare(Paquete a, Paquete b) {
             return Integer.compare(b.getPrioridad(), a.getPrioridad());
         }
     }
-    // 2. Clase que implementa explícitamente Comparator
+    // 2. Clase que compara pesos
     public static class ComparadorPesoDesc implements Comparator<Paquete> {
         @Override
         public int compare(Paquete a, Paquete b) {
             return Double.compare(b.getPeso(), a.getPeso());
         }
     }
-    // 3. Clase que implementa explícitamente Comparator
+    // 3. Clase que compara tiempo estimado
     public static class ComparadorTiempoAsc implements Comparator<Paquete> {
         @Override
         public int compare(Paquete a, Paquete b) {
             return Integer.compare(a.getTiempoEstimado(), b.getTiempoEstimado());
         }
     }
-    // 4. Clase que implementa explícitamente Comparator
+    // 4. Clase que compara despachopriotritaro
     public static class ComparadorDespachoPrioritario implements Comparator<Paquete> {
         @Override
         public int compare(Paquete a, Paquete b) {
@@ -43,7 +43,7 @@ public class ComparadoresPaquete  {
             return a.getCodigo().compareTo(b.getCodigo());
         }
     }
-    // Instancias para que el resto del proyecto las use directamente sin romper nada:
+    // Instancias
     public static final Comparator<Paquete> PRIORIDAD_DESC = new ComparadorPrioridadDesc();
     public static final Comparator<Paquete> PESO_DESC = new ComparadorPesoDesc();
     public static final Comparator<Paquete> TIEMPO_ASC = new ComparadorTiempoAsc();
