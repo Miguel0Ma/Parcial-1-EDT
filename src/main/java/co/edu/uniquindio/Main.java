@@ -12,7 +12,6 @@ import javax.swing.JTextArea;
 import java.awt.Font;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -45,6 +44,7 @@ public class Main {
             "18. Contar prioridad mínima (recursivo)",
             "19. Paquete de mayor peso (divide y vencerás)",
             "20. Demostración completa",
+            "21. Atender siguiente por orden de llegada",
             "0. Salir"
     };
 
@@ -147,6 +147,9 @@ public class Main {
                 break;
             case 20:
                 mostrar("Demostración completa", demostracion());
+                break;
+            case 21:
+                atenderPorLlegada(centro);
                 break;
             default:
                 break;
@@ -253,6 +256,15 @@ public class Main {
             informar("No hay paquetes en espera de despacho.");
         } else {
             informar("Siguiente a despachar (sin sacarlo):\n" + siguiente);
+        }
+    }
+
+    private static void atenderPorLlegada(CentroDistribucion centro) {
+        Paquete p = centro.atenderSiguientePorLlegada();
+        if (p == null) {
+            informar("No hay paquetes en espera de atención.");
+        } else {
+            informar("Paquete atendido por orden de llegada:\n" + p);
         }
     }
 
@@ -425,20 +437,11 @@ public class Main {
      * comparando la disponibilidad de los repartidores antes y después.
      */
     static String asignarAutomaticamenteYDescribir(CentroDistribucion centro, String codigo) {
-        List<String> disponiblesAntes = new ArrayList<>();
-        for (Repartidor r : centro.getRepartidores()) {
-            if (r.isDisponible()) {
-                disponiblesAntes.add(r.getId());
-            }
+        Repartidor r = centro.asignarAutomaticamente(codigo);
+        if (r == null) {
+            return "No había un repartidor disponible en la zona del paquete " + codigo + ".";
         }
-        centro.asignarAutomaticamente(codigo);
-        for (String id : disponiblesAntes) {
-            Repartidor r = centro.consultarRepartidor(id);
-            if (!r.isDisponible()) {
-                return "Paquete " + codigo + " asignado automáticamente a:\n" + r;
-            }
-        }
-        return "No había un repartidor disponible en la zona del paquete " + codigo + ".";
+        return "Paquete " + codigo + " asignado automáticamente a:\n" + r;
     }
 
     // =====================================================================
@@ -474,6 +477,12 @@ public class Main {
 
         titulo(sb, "6. Primeros 5 pendientes por orden de llegada");
         sb.append(enumerar(centro.getPendientes().subList(0, 5)));
+
+        titulo(sb, "6b. Atención por orden de llegada (cola)");
+        sb.append("Siguiente sin sacar: ").append(centro.verSiguientePorLlegada()).append("\n");
+        for (int i = 1; i <= 2; i++) {
+            sb.append("Atendido ").append(i).append(": ").append(centro.atenderSiguientePorLlegada()).append("\n");
+        }
 
         titulo(sb, "7. Orden natural por código (primeros 5)");
         sb.append(enumerar(centro.ordenNatural().subList(0, 5)));

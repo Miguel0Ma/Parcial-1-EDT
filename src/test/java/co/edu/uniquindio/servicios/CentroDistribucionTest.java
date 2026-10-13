@@ -369,4 +369,108 @@ class CentroDistribucionOperacionesTest {
         assertEquals(2, centro.getRepartidores().size());
         assertThrows(UnsupportedOperationException.class, () -> centro.getRepartidores().clear());
     }
+
+    // ---------- atención por orden de llegada (cola) ----------
+
+    /** Orden de llegada del enunciado: PQ731, PQ105, PQ942, PQ318. */
+    private void cargarOrdenDeLlegada() {
+        centro.registrarPaquete(new Paquete("PQ731", "Armenia", 4.5, 5, 45));
+        centro.registrarPaquete(new Paquete("PQ105", "Salento", 3.0, 5, 25));
+        centro.registrarPaquete(new Paquete("PQ942", "Armenia", 7.2, 4, 20));
+        centro.registrarPaquete(new Paquete("PQ318", "Calarcá", 2.3, 2, 60));
+    }
+
+    @Test
+    void atiendeLosPaquetesEnElOrdenExactoDeLlegada() {
+        cargarOrdenDeLlegada();
+        assertEquals("PQ731", centro.atenderSiguientePorLlegada().getCodigo());
+        assertEquals("PQ105", centro.atenderSiguientePorLlegada().getCodigo());
+        assertEquals("PQ942", centro.atenderSiguientePorLlegada().getCodigo());
+        assertEquals("PQ318", centro.atenderSiguientePorLlegada().getCodigo());
+        assertNull(centro.atenderSiguientePorLlegada());
+    }
+
+    @Test
+    void verSiguientePorLlegadaNoSacaElPaquete() {
+        cargarOrdenDeLlegada();
+        assertEquals("PQ731", centro.verSiguientePorLlegada().getCodigo());
+        assertEquals("PQ731", centro.verSiguientePorLlegada().getCodigo());
+        assertEquals("PQ731", centro.atenderSiguientePorLlegada().getCodigo());
+        assertEquals("PQ105", centro.verSiguientePorLlegada().getCodigo());
+    }
+
+    @Test
+    void atenderPorLlegadaSinPaquetesDevuelveNull() {
+        assertNull(centro.verSiguientePorLlegada());
+        assertNull(centro.atenderSiguientePorLlegada());
+    }
+
+    @Test
+    void unPaqueteAtendidoPorLlegadaYaNoSeDespachaPorPrioridad() {
+        centro.registrarPaquete(new Paquete("PQ420", "Armenia", 6.0, 3, 30));
+        centro.registrarPaquete(new Paquete("PQ731", "Armenia", 4.5, 5, 45));
+        centro.registrarPaquete(new Paquete("PQ105", "Salento", 3.0, 5, 25));
+        centro.registrarPaquete(new Paquete("PQ942", "Armenia", 7.2, 4, 20));
+
+        assertEquals("PQ420", centro.atenderSiguientePorLlegada().getCodigo());
+
+        assertEquals("PQ105", centro.despacharProritario().getCodigo());
+        assertEquals("PQ731", centro.despacharProritario().getCodigo());
+        assertEquals("PQ942", centro.despacharProritario().getCodigo());
+        assertNull(centro.despacharProritario());
+    }
+
+    @Test
+    void unPaqueteDespachadoPorPrioridadYaNoSeAtiendePorLlegada() {
+        centro.registrarPaquete(new Paquete("PQ420", "Armenia", 6.0, 3, 30));
+        centro.registrarPaquete(new Paquete("PQ731", "Armenia", 4.5, 5, 45));
+
+        assertEquals("PQ731", centro.despacharProritario().getCodigo());
+        assertEquals("PQ420", centro.atenderSiguientePorLlegada().getCodigo());
+        assertNull(centro.atenderSiguientePorLlegada());
+    }
+
+    @Test
+    void atenderPorLlegadaNoLoEntregaNiLoSacaDePendientes() {
+        cargarOrdenDeLlegada();
+        centro.atenderSiguientePorLlegada();
+        assertEquals(4, centro.getPendientes().size());
+        assertEquals(4, centro.getRegistro().size());
+    }
+
+    // ---------- asignación automática: casos de borde ----------
+
+    @Test
+    void asignarAutomaticamenteDevuelveAlRepartidorAsignado() {
+        centro.registrarPaquete(new Paquete("PQ731", "Armenia", 4.5, 5, 45));
+        centro.registrarRepartidor(new Repartidor("R1", "Ana", "Salento", true));
+        centro.registrarRepartidor(new Repartidor("R2", "Luis", "Armenia", true));
+
+        Repartidor asignado = centro.asignarAutomaticamente("PQ731");
+
+        assertSame(centro.consultarRepartidor("R2"), asignado);
+    }
+
+    @Test
+    void asignarAutomaticamenteConDosDisponiblesEnLaZonaAsignaSoloAlPrimero() {
+        centro.registrarPaquete(new Paquete("PQ731", "Armenia", 4.5, 5, 45));
+        centro.registrarRepartidor(new Repartidor("R1", "Ana", "Armenia", true));
+        centro.registrarRepartidor(new Repartidor("R2", "Luis", "Armenia", true));
+
+        Repartidor asignado = centro.asignarAutomaticamente("PQ731");
+
+        assertEquals("R1", asignado.getId());
+        assertFalse(centro.consultarRepartidor("R1").isDisponible());
+        assertTrue(centro.consultarRepartidor("R2").isDisponible());
+    }
+
+    @Test
+    void asignarAutomaticamenteSinDisponiblesEnLaZonaDevuelveNull() {
+        centro.registrarPaquete(new Paquete("PQ731", "Armenia", 4.5, 5, 45));
+        centro.registrarRepartidor(new Repartidor("R1", "Ana", "Armenia", false));
+        centro.registrarRepartidor(new Repartidor("R2", "Luis", "Salento", true));
+
+        assertNull(centro.asignarAutomaticamente("PQ731"));
+        assertTrue(centro.consultarRepartidor("R2").isDisponible());
+    }
 }

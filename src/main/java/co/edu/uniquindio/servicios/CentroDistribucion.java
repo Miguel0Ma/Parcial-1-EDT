@@ -84,6 +84,26 @@ public class CentroDistribucion {
         return colaPrioridad.peek();
     }
 
+    // Atención por orden de llegada
+
+    /**
+     * Atiende al paquete que lleva más tiempo esperando (el primero en registrarse
+     * entre los que siguen en espera). Devuelve null si no hay ninguno.
+     * Costo: poll O(1) + quitar de la cola prioritaria O(n).
+     */
+    public Paquete atenderSiguientePorLlegada(){
+        Paquete paquete = colaLlegada.poll();
+        if(paquete != null){
+            colaPrioridad.remove(paquete);      // ya fue atendido: no puede despacharse otra vez
+        }
+        return paquete;
+    }
+
+    /** Consulta quién sería el siguiente por orden de llegada, sin sacarlo. */
+    public Paquete verSiguientePorLlegada(){
+        return colaLlegada.peek();
+    }
+
     //Asignacion y entrega
 
     public void asignarPaquete(String codigo,String idRepartidor){
@@ -113,6 +133,11 @@ public class CentroDistribucion {
         colaPrioridad.remove(paquete);
     }
 
+    /**
+     * Asigna el paquete al primer repartidor disponible cuya zona coincide con el destino.
+     *
+     * @return el repartidor asignado, o null si no hay ninguno disponible en esa zona
+     */
     public Repartidor asignarAutomaticamente(String codigo){
         Paquete paquete = paquetesPorCodigo.get(codigo);
 
@@ -122,9 +147,10 @@ public class CentroDistribucion {
         for (Repartidor r:repartidores.values()){
             if (r.isDisponible()&&r.getZona().equalsIgnoreCase(paquete.getDestino())){
                 asignarPaquete(codigo,r.getId());
+                return r;                       // ya se asignó: no seguir buscando
             }
         }
-        return null;
+        return null;                            // ningún repartidor disponible en la zona
     }
 
     public void registrarEntrega(String codigo){
